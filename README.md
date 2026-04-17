@@ -1,5 +1,16 @@
 # Brownfield AWS Import Guide (Terraform Search + Import + MCP + Agent Skills)
 
+This guide helps you move from a working, pre-existing AWS environment to Terraform-managed infrastructure in a controlled way.
+
+Before you start, review the workflow architecture below. It shows the operating model used in this guide:
+
+1. Bootstrap and validate the environment with CloudFormation and app deployment.
+2. Treat that environment as brownfield (existing resources outside Terraform state).
+3. Use sample prompts, Terraform MCP Server, and Agent Skills to discover resources, generate Terraform configuration, and build import mappings.
+4. Validate, plan, and stabilize drift so Terraform becomes the source of truth for ongoing lifecycle changes.
+
+![Brownfield Terraform Import Workflow](diagrams/Terraform_Import_Workflow.png)
+
 This directory demonstrates a practical, repeatable workflow for bringing an existing AWS environment (brownfield) under Terraform management.
 
 For this demo, infrastructure is first created with CloudFormation in `cfn-infra/`. After that deployment is complete, treat the environment as unmanaged infrastructure and onboard it into Terraform using:
