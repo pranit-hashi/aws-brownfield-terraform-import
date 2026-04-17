@@ -9,7 +9,7 @@ For this demo, infrastructure is first created with CloudFormation in `cfn-infra
 3. Terraform MCP Server
 4. Agent Skills
 
-Important: after CloudFormation bootstrap, assume no Terraform files exist for that environment. Use sample prompts in `prompts.md` (or your own prompts) to generate Terraform files with help from MCP Server and Agent Skills.
+Important: after CloudFormation bootstrap, assume no Terraform files exist for that environment. Use sample prompts in `sample_prompts.md` (or your own prompts) to generate Terraform files with help from MCP Server and Agent Skills.
 
 ## Prerequisites
 
@@ -206,4 +206,4 @@ After successful import and stabilization:
 1. If you run this against a different account/region, regenerate identifiers in `imports.tf`.
 2. Keep import mappings and drift controls under version control.
 3. Avoid broad ignore rules; prefer minimal, explicit lifecycle controls.
-4. Use `prompts.md` as the starting point for consistent LLM-driven execution.
+4. Use `sample_prompts.md` as the starting point for consistent LLM-driven execution.
