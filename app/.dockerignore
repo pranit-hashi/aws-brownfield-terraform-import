@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+.env
+.env.*
+.DS_Store
+.git/
+.gitignore
+.playwright-mcp/
+.vscode/

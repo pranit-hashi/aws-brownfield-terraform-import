@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraform Search and Import Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/app.css') }}">
+</head>
+<body>
+    <main class="shell">
+        <section class="hero" aria-labelledby="page-title">
+            <div class="hero-banner">
+                <img
+                    class="hero-banner-image"
+                    src="{{ url_for('static', filename='images/CSP_Header_Terraform.png') }}"
+                    alt="HashiCorp Terraform header artwork"
+                >
+            </div>
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <span class="eyebrow">Terraform Search and Import feature demo</span>
+                    <h1 id="page-title">Bulk import a brownfield application.</h1>
+                    <p>
+                        This interface demonstrates a Terraform Search and Import experience for discovering existing
+                        infrastructure and bringing a brownfield application under Terraform management with HashiCorp
+                        Helios-inspired UI.
+                    </p>
+                </div>
+                <aside class="stat-card" aria-label="Submission summary">
+                    <p class="stat-label">Recent submissions</p>
+                    <p class="stat-value">{{ items|length }}</p>
+                    <p class="stat-meta">Latest records are shown alongside the form for quick verification.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="layout" aria-label="Submission workspace">
+            <section class="panel" aria-labelledby="form-title">
+                <h2 id="form-title">New submission</h2>
+                <p class="panel-intro">
+                    Add import details for a brownfield resource.
+                </p>
+
+                {% if message %}
+                <div class="alert alert-{{ message_type }}" role="status" aria-live="polite">
+                    <div>
+                        <strong>{% if message_type == 'success' %}Submission saved{% else %}Submission blocked{% endif %}</strong>
+                        <p>{{ message }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/submit">
+                    <div class="field">
+                        <label for="name">Name</label>
+                        <p class="field-hint">Use the full name you want stored with the submission record.</p>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value="{{ values.name }}"
+                            required
+                            autocomplete="name"
+                            placeholder="Jane Doe"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="email">Email</label>
+                        <p class="field-hint">This is used as the primary contact identifier in the list of recent submissions.</p>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ values.email }}"
+                            required
+                            autocomplete="email"
+                            placeholder="jane@example.com"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="message">Message</label>
+                        <p class="field-hint">Include the details you want persisted to DynamoDB for follow-up or auditing.</p>
+                        <textarea
+                            id="message"
+                            name="message"
+                            required
+                            placeholder="Share the context or request details here."
+                        >{{ values.message }}</textarea>
+                    </div>
+
+                    <div class="button-row">
+                        <span class="button-meta">Submit to add a new record.</span>
+                        <button class="button-primary" type="submit">Submit record</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="panel" aria-labelledby="submissions-title">
+                <div class="submissions-header">
+                    <div>
+                        <h2 id="submissions-title">Recent submissions</h2>
+                        <p>Entries are sorted by newest creation timestamp first.</p>
+                    </div>
+                    <span class="chip">{{ data_source_label }}</span>
+                </div>
+
+                {% if items %}
+                <div class="data-list">
+                    {% for item in items %}
+                    <article class="data-item">
+                        <div class="item-head">
+                            <div>
+                                <strong>{{ item.name }}</strong>
+                                <p class="item-email">{{ item.email }}</p>
+                            </div>
+                            <span class="item-time">{{ item.createdAt }}</span>
+                        </div>
+                        <p class="item-message">{{ item.message }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <h3>No submissions yet</h3>
+                    <p>Your first successful form submission will appear here.</p>
+                </div>
+                {% endif %}
+            </section>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,156 @@
+---
+# Namespace for the application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: user-app
+  labels:
+    app: user-data-app
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: user-app
+data:
+  DYNAMODB_TABLE_NAME: "demo-user-data"
+  AWS_REGION: "<AWS_REGION>"
+  PORT: "8080"
+
+---
+# Deployment for the user data application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-data-app
+  namespace: user-app
+  labels:
+    app: user-data-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-data-app
+  template:
+    metadata:
+      labels:
+        app: user-data-app
+    spec:
+      serviceAccountName: user-app-sa
+      containers:
+        - name: user-data-app
+          image: <ECR_REPOSITORY_URI>:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: app-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+---
+# Service for the application
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-data-service
+  namespace: user-app
+  labels:
+    app: user-data-app
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: user-data-app
+
+---
+# ServiceAccount for the application (for IRSA - IAM Roles for Service Accounts)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: user-app-sa
+  namespace: user-app
+  annotations:
+    # IAM role for DynamoDB access via IRSA (from CloudFormation output UserAppDynamoDBRoleArn)
+    eks.amazonaws.com/role-arn: <IAM_ROLE_ARN>
+
+---
+# Ingress for ALB integration (requires AWS Load Balancer Controller)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: user-data-ingress
+  namespace: user-app
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: user-data-service
+                port:
+                  number: 8080
+
+---
+# HorizontalPodAutoscaler for automatic scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: user-data-app-hpa
+  namespace: user-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: user-data-app
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
