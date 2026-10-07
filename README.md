@@ -218,3 +218,4 @@ After successful import and stabilization:
 2. Keep import mappings and drift controls under version control.
 3. Avoid broad ignore rules; prefer minimal, explicit lifecycle controls.
 4. Use `sample_prompts.md` as the starting point for consistent LLM-driven execution.
+5. After importing all demo resources into Terraform, remove the CloudFormation stack so that only Terraform manages them. Before deleting the stack, uncomment `DeletionPolicy: Retain` for every resource in `cfn-infra/three-tier-app.yaml` and update the stack. Otherwise, CloudFormation can delete resources that are still managed by Terraform. See the [CloudFormation `DeletionPolicy` documentation](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-attribute-deletionpolicy.html).

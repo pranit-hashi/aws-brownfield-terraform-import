@@ -71,6 +71,8 @@ Set environment variables once and reuse them in commands:
 
 ```bash
 export AWS_REGION=<YOUR_AWS_REGION>
+```
+```bash
 export ACCOUNT_ID=<YOUR_ACCOUNT_ID>
 ```
 
@@ -86,7 +88,7 @@ aws cloudformation create-stack \
   --region $AWS_REGION \
   --parameters \
     ParameterKey=EnvironmentName,ParameterValue=demo \
-    ParameterKey=EKSClusterVersion,ParameterValue=1.35
+    ParameterKey=EKSClusterVersion,ParameterValue=1.37
 ```
 
 ### Step 2: Build and Push Docker Image While the Stack Provisions
@@ -95,11 +97,16 @@ The full CloudFormation stack usually takes around 15 minutes to finish, but the
 
 ```bash
 cd app
+```
 
-# Get ECR login
+### Get ECR login
+
+```bash
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+```
 
-# Build and push
+### Build and push
+```bash
 docker buildx build --platform linux/amd64,linux/arm64 \
   -t $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/user-data-app:latest \
   --push .
@@ -115,13 +122,15 @@ aws cloudformation wait stack-create-complete --stack-name three-tier-app --regi
 
 ```bash
 cd ../cfn-infra/
+```
 
-# CloudFormation creates IAM/OIDC resources for IRSA.
-# This script reads role ARNs from stack outputs and performs cluster-side setup:
-# 1) Install/upgrade AWS Load Balancer Controller via Helm
-# 2) Configure controller service account annotation through Helm values
-# Optional: set STACK_NAME if your stack is not named three-tier-app
-# export STACK_NAME=<your_stack_name>
+ CloudFormation creates IAM/OIDC resources for IRSA.
+This script reads role ARNs from stack outputs and performs cluster-side setup:
+ 1) Install/upgrade AWS Load Balancer Controller via Helm
+ 2) Configure controller service account annotation through Helm values
+ Optional: set STACK_NAME if your stack is not named three-tier-app export STACK_NAME=<your_stack_name>
+
+```bash
 ./setup-alb-controller.sh
 ```
 
@@ -159,12 +168,22 @@ kubectl apply -f k8s-manifests/app-deployment.yaml
 
 ### Step 6: Verify Deployment
 
+Check pods
 ```bash
-# Check pods
 kubectl get pods -n user-app
+```
 
-# Get ALB URL
+Get ALB URL
+```bash
 kubectl get ingress -n user-app
+```
+
+Wait for the demo website to finish starting, then open the ALB URL in a browser. Refresh the page until the website loads. If it is still unavailable after a couple of minutes, troubleshoot the Kubernetes pods and logs:
+```bash
+kubectl get pods -n user-app
+```
+```bash
+kubectl logs -n user-app <pod-name>
 ```
 
 ## API Endpoints
@@ -201,15 +220,19 @@ After deployment, the stack exports:
 
 ## Cleanup
 
+Delete Kubernetes resources
 ```bash
-# Delete Kubernetes resources
 kubectl delete -f k8s-manifests/app-deployment.yaml
+```
 
-# Delete ECR repository and all images before deleting the stack
-# CloudFormation cannot delete a non-empty repository
+Delete ECR repository and all images before deleting the stack
+CloudFormation cannot delete a non-empty repository
+```bash
 aws ecr delete-repository --repository-name user-data-app --region $AWS_REGION --force
+```
 
-# Delete CloudFormation stack
+Delete CloudFormation stack
+```bash
 aws cloudformation delete-stack --stack-name three-tier-app
 ```
 

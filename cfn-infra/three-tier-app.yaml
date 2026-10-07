@@ -36,7 +36,7 @@ Parameters:
 
   EKSClusterVersion:
     Type: String
-    Default: '1.35'
+    Default: '1.37'
     Description: EKS Kubernetes version
 
   NodeInstanceType:
@@ -65,6 +65,7 @@ Resources:
   #============================================================================
   VPC:
     Type: AWS::EC2::VPC
+    # DeletionPolicy: Retain
     Properties:
       CidrBlock: !Ref VpcCIDR
       EnableDnsHostnames: true
@@ -75,6 +76,7 @@ Resources:
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
+    # DeletionPolicy: Retain
     Properties:
       Tags:
         - Key: Name
@@ -82,6 +84,7 @@ Resources:
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    # DeletionPolicy: Retain
     Properties:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
@@ -89,6 +92,7 @@ Resources:
   # Public Subnets
   PublicSubnet1:
     Type: AWS::EC2::Subnet
+    # DeletionPolicy: Retain
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [0, !GetAZs '']
@@ -104,6 +108,7 @@ Resources:
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
+    # DeletionPolicy: Retain
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [1, !GetAZs '']
@@ -120,6 +125,7 @@ Resources:
   # Private Subnets
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
+    # DeletionPolicy: Retain
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [0, !GetAZs '']
@@ -135,6 +141,7 @@ Resources:
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
+    # DeletionPolicy: Retain
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [1, !GetAZs '']
@@ -151,6 +158,7 @@ Resources:
   # NAT Gateway
   NatGatewayEIP:
     Type: AWS::EC2::EIP
+    # DeletionPolicy: Retain
     DependsOn: InternetGatewayAttachment
     Properties:
       Domain: vpc
@@ -160,6 +168,7 @@ Resources:
 
   NatGateway:
     Type: AWS::EC2::NatGateway
+    # DeletionPolicy: Retain
     Properties:
       AllocationId: !GetAtt NatGatewayEIP.AllocationId
       SubnetId: !Ref PublicSubnet1
@@ -170,6 +179,7 @@ Resources:
   # Route Tables
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
+    # DeletionPolicy: Retain
     Properties:
       VpcId: !Ref VPC
       Tags:
@@ -178,6 +188,7 @@ Resources:
 
   DefaultPublicRoute:
     Type: AWS::EC2::Route
+    # DeletionPolicy: Retain
     DependsOn: InternetGatewayAttachment
     Properties:
       RouteTableId: !Ref PublicRouteTable
@@ -186,18 +197,21 @@ Resources:
 
   PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    # DeletionPolicy: Retain
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
 
   PublicSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    # DeletionPolicy: Retain
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet2
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
+    # DeletionPolicy: Retain
     Properties:
       VpcId: !Ref VPC
       Tags:
@@ -206,6 +220,7 @@ Resources:
 
   DefaultPrivateRoute:
     Type: AWS::EC2::Route
+    # DeletionPolicy: Retain
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 0.0.0.0/0
@@ -213,12 +228,14 @@ Resources:
 
   PrivateSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    # DeletionPolicy: Retain
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet1
 
   PrivateSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    # DeletionPolicy: Retain
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet2
@@ -228,6 +245,7 @@ Resources:
   #============================================================================
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    # DeletionPolicy: Retain
     Properties:
       GroupName: !Sub ${EnvironmentName}-alb-sg
       GroupDescription: Security group for Application Load Balancer
@@ -249,6 +267,7 @@ Resources:
 
   EKSClusterSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    # DeletionPolicy: Retain
     Properties:
       GroupName: !Sub ${EnvironmentName}-eks-cluster-sg
       GroupDescription: Security group for EKS cluster
@@ -259,6 +278,7 @@ Resources:
 
   EKSNodeSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    # DeletionPolicy: Retain
     Properties:
       GroupName: !Sub ${EnvironmentName}-eks-node-sg
       GroupDescription: Security group for EKS worker nodes
@@ -285,6 +305,7 @@ Resources:
 
   EKSNodeSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
+    # DeletionPolicy: Retain
     Properties:
       GroupId: !Ref EKSNodeSecurityGroup
       IpProtocol: '-1'
@@ -293,6 +314,7 @@ Resources:
 
   EKSClusterToNodeSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
+    # DeletionPolicy: Retain
     Properties:
       GroupId: !Ref EKSNodeSecurityGroup
       IpProtocol: tcp
@@ -303,6 +325,7 @@ Resources:
 
   EKSClusterToNodeAllPortsIngress:
     Type: AWS::EC2::SecurityGroupIngress
+    # DeletionPolicy: Retain
     Properties:
       GroupId: !Ref EKSNodeSecurityGroup
       IpProtocol: tcp
@@ -316,6 +339,7 @@ Resources:
   #============================================================================
   EKSClusterRole:
     Type: AWS::IAM::Role
+    # DeletionPolicy: Retain
     Properties:
       RoleName: !Sub ${EnvironmentName}-eks-cluster-role
       AssumeRolePolicyDocument:
@@ -331,6 +355,7 @@ Resources:
 
   EKSNodeRole:
     Type: AWS::IAM::Role
+    # DeletionPolicy: Retain
     Properties:
       RoleName: !Sub ${EnvironmentName}-eks-node-role
       AssumeRolePolicyDocument:
@@ -348,6 +373,7 @@ Resources:
   # DynamoDB Access Policy for EKS Nodes
   DynamoDBAccessPolicy:
     Type: AWS::IAM::Policy
+    # DeletionPolicy: Retain
     Properties:
       PolicyName: !Sub ${EnvironmentName}-dynamodb-access-policy
       PolicyDocument:
@@ -371,6 +397,7 @@ Resources:
 
   EKSNodeLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
+    # DeletionPolicy: Retain
     Properties:
       LaunchTemplateName: !Sub ${EnvironmentName}-eks-node-lt
       LaunchTemplateData:
@@ -381,6 +408,7 @@ Resources:
 
   EKSOIDCProvider:
     Type: AWS::IAM::OIDCProvider
+    # DeletionPolicy: Retain
     Properties:
       Url: !GetAtt EKSCluster.OpenIdConnectIssuerUrl
       ClientIdList:
@@ -390,6 +418,7 @@ Resources:
 
   AWSLoadBalancerControllerIAMPolicy:
     Type: AWS::IAM::ManagedPolicy
+    # DeletionPolicy: Retain
     Properties:
       PolicyDocument:
         Version: '2012-10-17'
@@ -564,6 +593,7 @@ Resources:
 
   LoadBalancerControllerRole:
     Type: AWS::IAM::Role
+    # DeletionPolicy: Retain
     DependsOn: EKSOIDCProvider
     Properties:
       AssumeRolePolicyDocument:
@@ -593,6 +623,7 @@ Resources:
 
   UserAppDynamoDBRole:
     Type: AWS::IAM::Role
+    # DeletionPolicy: Retain
     DependsOn: EKSOIDCProvider
     Properties:
       AssumeRolePolicyDocument:
@@ -620,6 +651,7 @@ Resources:
 
   UserAppDynamoDBAccessPolicy:
     Type: AWS::IAM::Policy
+    # DeletionPolicy: Retain
     Properties:
       PolicyName: UserAppDynamoDBAccess
       Roles:
@@ -647,6 +679,7 @@ Resources:
   #============================================================================
   EKSCluster:
     Type: AWS::EKS::Cluster
+    # DeletionPolicy: Retain
     Properties:
       Name: !Sub ${EnvironmentName}-eks-cluster
       Version: !Ref EKSClusterVersion
@@ -673,6 +706,7 @@ Resources:
 
   EKSNodeGroup:
     Type: AWS::EKS::Nodegroup
+    # DeletionPolicy: Retain
     DependsOn: EKSCluster
     Properties:
       ClusterName: !Sub ${EnvironmentName}-eks-cluster
@@ -703,6 +737,7 @@ Resources:
   #============================================================================
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    # DeletionPolicy: Retain
     Properties:
       Name: !Sub ${EnvironmentName}-alb
       Type: application
@@ -719,6 +754,7 @@ Resources:
 
   ALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    # DeletionPolicy: Retain
     Properties:
       Name: !Sub ${EnvironmentName}-tg
       Port: 8080
@@ -740,6 +776,7 @@ Resources:
 
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
+    # DeletionPolicy: Retain
     Properties:
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: 80
@@ -753,6 +790,7 @@ Resources:
   #============================================================================
   UserDataTable:
     Type: AWS::DynamoDB::Table
+    # DeletionPolicy: Retain
     Properties:
       TableName: !Sub ${EnvironmentName}-user-data
       BillingMode: PAY_PER_REQUEST
@@ -788,6 +826,7 @@ Resources:
   #============================================================================
   UserDataAppRepository:
     Type: AWS::ECR::Repository
+    # DeletionPolicy: Retain
     Properties:
       RepositoryName: user-data-app
       ImageScanningConfiguration:
