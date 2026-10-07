@@ -1,4 +1,4 @@
-# Three-Tier Application with ALB, EKS 1.35, and DynamoDB
+# Three-Tier Application with ALB, EKS 1.37, and DynamoDB
 
 This project contains a complete AWS CloudFormation template for deploying a three-tier application architecture.
 
@@ -18,7 +18,7 @@ This project contains a complete AWS CloudFormation template for deploying a thr
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            Amazon EKS Cluster                                │
-│                          (Kubernetes v1.35)                                  │
+│                          (Kubernetes v1.37)                                  │
 │  ┌───────────────────────────────────────────────────────────────────────┐  │
 │  │                         EKS Node Group                                 │  │
 │  │                    (Private Subnets - AZ1/AZ2)                        │  │
@@ -42,7 +42,7 @@ This project contains a complete AWS CloudFormation template for deploying a thr
 - **Internet Gateway**: For public internet access
 - **NAT Gateway**: For private subnet internet access
 - **Security Groups**: For ALB, EKS cluster, and worker nodes
-- **EKS Cluster**: Kubernetes 1.35 with managed node group
+- **EKS Cluster**: Kubernetes 1.37 with managed node group
 - **EKS Node Launch Template**: Enables EC2 metadata access with hop limit 2 for container workloads
 - **IAM + OIDC for IRSA**: CloudFormation creates OIDC provider and IAM roles for ALB controller and app service account
 - **ECR Repository**: CloudFormation creates the `user-data-app` repository for container images
@@ -204,7 +204,7 @@ kubectl logs -n user-app <pod-name>
 |-----------|---------|-------------|
 | EnvironmentName | demo | Environment name prefix |
 | VpcCIDR | 10.0.0.0/16 | VPC CIDR block |
-| EKSClusterVersion | 1.35 | EKS Kubernetes version |
+| EKSClusterVersion | 1.37 | EKS Kubernetes version |
 | NodeInstanceType | t3.medium | EC2 instance type for nodes |
 | NodeGroupDesiredSize | 2 | Desired number of nodes |
 
