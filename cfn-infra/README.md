@@ -178,6 +178,8 @@ Get ALB URL
 kubectl get ingress -n user-app
 ```
 
+> **Note:** Open the ingress URL from the output above using **HTTP only** (`http://<ALB-URL>`). Browsers often upgrade a bare URL from HTTP to HTTPS by default, but the ALB has no HTTPS listener and no listener rule to redirect HTTP to HTTPS, so the website will not load over HTTPS. If the page does not load, make sure the address bar shows `http://` and not `https://`.
+
 Wait for the demo website to finish starting, then open the ALB URL in a browser. Refresh the page until the website loads. If it is still unavailable after a couple of minutes, troubleshoot the Kubernetes pods and logs:
 ```bash
 kubectl get pods -n user-app

@@ -1,13 +1,25 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Three-tier application with Application Load Balancer, AWS EKS 1.35, and DynamoDB.
+  Three-tier application with Application Load Balancer, AWS EKS 1.37, and DynamoDB.
   Simple user input application that stores data in DynamoDB.
+
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
 
 Parameters:
   EnvironmentName:
     Type: String
     Default: demo
     Description: Environment name prefix for resources
+    MinLength: 1
+    MaxLength: 28
+    AllowedPattern: ^[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9])?$
+    ConstraintDescription: >-
+      Must be 1-28 characters, start with a letter, end with a letter or digit,
+      and contain only letters, digits and hyphens. The limit comes from the ALB
+      name (this value plus '-alb', max 32 chars); IAM role names (max 64) and
+      the other prefixed names have more headroom.
 
   VpcCIDR:
     Type: String
@@ -340,8 +352,13 @@ Resources:
   EKSClusterRole:
     Type: AWS::IAM::Role
     # DeletionPolicy: Retain
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: IAM names are account-global; region suffix lets same stack deploy to >1 region in one account
+        must:
+          - RoleName <= 64 chars; keep region suffix
     Properties:
-      RoleName: !Sub ${EnvironmentName}-eks-cluster-role
+      RoleName: !Sub ${EnvironmentName}-eks-cluster-role-${AWS::Region}
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -356,8 +373,13 @@ Resources:
   EKSNodeRole:
     Type: AWS::IAM::Role
     # DeletionPolicy: Retain
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: IAM names are account-global; region suffix lets same stack deploy to >1 region in one account
+        must:
+          - RoleName <= 64 chars; keep region suffix
     Properties:
-      RoleName: !Sub ${EnvironmentName}-eks-node-role
+      RoleName: !Sub ${EnvironmentName}-eks-node-role-${AWS::Region}
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -605,7 +627,7 @@ Resources:
                 {
                   "Effect": "Allow",
                   "Principal": {
-                    "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderHost}"
+                    "Federated": "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderHost}"
                   },
                   "Action": "sts:AssumeRoleWithWebIdentity",
                   "Condition": {
@@ -635,7 +657,7 @@ Resources:
                 {
                   "Effect": "Allow",
                   "Principal": {
-                    "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderHost}"
+                    "Federated": "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderHost}"
                   },
                   "Action": "sts:AssumeRoleWithWebIdentity",
                   "Condition": {
